@@ -1,0 +1,11 @@
+{
+  "name": "corploc-skills",
+  "version": "0.1.0",
+  "description": "Curated skills from the corploc org — pentest workflows, diagram generation",
+  "author": {
+    "name": "corploc",
+    "url": "https://github.com/corploc"
+  },
+  "repository": "https://github.com/corploc/claude-code-plugins",
+  "license": "MIT"
+}
