@@ -18,7 +18,7 @@
         "source": "github",
         "repo": "corploc/glm-plugin-cc",
         "ref": "main",
-        "sha": "c20c78237050f03070d5bc81d48a89733428a885"
+        "sha": "2891321fbbd59f7c86e831f1a7ce41741d1766e0"
       },
       "description": "GLM companion for Claude Code — delegate tasks, reviews, and rescue operations to ZhipuAI models",
       "version": "1.0.0",
