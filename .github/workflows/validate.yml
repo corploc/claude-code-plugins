@@ -1,0 +1,112 @@
+name: Validate Marketplace
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-marketplace-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON syntax
+        run: jq empty .claude-plugin/marketplace.json
+
+      - name: Check relative sources exist
+        run: |
+          jq -r '.plugins[] | select(.source | type == "string") | .source' .claude-plugin/marketplace.json | while read -r src; do
+            if [ ! -d "$src" ]; then
+              echo "ERROR: relative source '$src' does not exist"
+              exit 1
+            fi
+            if [ ! -f "$src/.claude-plugin/plugin.json" ]; then
+              echo "ERROR: '$src' missing .claude-plugin/plugin.json"
+              exit 1
+            fi
+            echo "OK: $src"
+          done
+
+  validate-embedded-plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check plugin structure
+        run: |
+          for plugin_dir in plugins/*/; do
+            name=$(basename "$plugin_dir")
+            echo "Checking $name..."
+
+            if [ ! -f "$plugin_dir/.claude-plugin/plugin.json" ]; then
+              echo "ERROR: $name missing .claude-plugin/plugin.json"
+              exit 1
+            fi
+
+            jq empty "$plugin_dir/.claude-plugin/plugin.json" || {
+              echo "ERROR: $name plugin.json is invalid JSON"
+              exit 1
+            }
+
+            has_content=false
+            for content_dir in skills commands agents; do
+              if [ -d "$plugin_dir/$content_dir" ] && [ -n "$(ls -A "$plugin_dir/$content_dir" 2>/dev/null)" ]; then
+                has_content=true
+                break
+              fi
+            done
+
+            if [ "$has_content" = false ]; then
+              echo "ERROR: $name has no skills/, commands/, or agents/ content"
+              exit 1
+            fi
+
+            echo "OK: $name"
+          done
+
+  check-external-sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify external repos are accessible
+        run: |
+          jq -r '.plugins[] | select(.source | type == "object") | .source | select(.source == "github") | .repo' .claude-plugin/marketplace.json | while read -r repo; do
+            echo "Checking $repo..."
+            status=$(curl -s -o /dev/null -w "%{http_code}" "https://api.github.com/repos/$repo")
+            if [ "$status" != "200" ]; then
+              echo "ERROR: repo '$repo' not accessible (HTTP $status)"
+              exit 1
+            fi
+            echo "OK: $repo (HTTP $status)"
+          done
+
+      - name: Verify pinned SHAs exist
+        run: |
+          jq -r '.plugins[] | select(.source | type == "object") | .source | select(.sha != null) | "\(.repo) \(.sha)"' .claude-plugin/marketplace.json | while read -r repo sha; do
+            echo "Checking $repo@$sha..."
+            status=$(curl -s -o /dev/null -w "%{http_code}" "https://api.github.com/repos/$repo/commits/$sha")
+            if [ "$status" != "200" ]; then
+              echo "ERROR: commit '$sha' not found in '$repo' (HTTP $status)"
+              exit 1
+            fi
+            echo "OK: $repo@${sha:0:7}"
+          done
+
+  version-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check embedded plugin versions match
+        run: |
+          jq -r '.plugins[] | select(.source | type == "string") | "\(.name) \(.version) \(.source)"' .claude-plugin/marketplace.json | while read -r name version source; do
+            plugin_version=$(jq -r '.version' "$source/.claude-plugin/plugin.json")
+            if [ "$version" != "$plugin_version" ]; then
+              echo "ERROR: $name version mismatch — marketplace=$version, plugin.json=$plugin_version"
+              exit 1
+            fi
+            echo "OK: $name version=$version"
+          done
