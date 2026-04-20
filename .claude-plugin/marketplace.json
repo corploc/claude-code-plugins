@@ -13,15 +13,15 @@
       "category": "security"
     },
     {
-      "name": "glm-plugin",
+      "name": "glm",
       "source": {
         "source": "github",
         "repo": "corploc/glm-plugin-cc",
         "ref": "main",
-        "sha": "d93f105655e8e5f0a43f56b52fe9b5d99124d405"
+        "sha": "e75cd54b2d8933c80cb778733c51ef8e28806e09"
       },
       "description": "GLM companion for Claude Code — delegate tasks, reviews, and rescue operations to ZhipuAI models",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "category": "ai"
     }
   ]
