@@ -1,0 +1,28 @@
+{
+  "name": "corploc",
+  "owner": {
+    "name": "corploc",
+    "url": "https://github.com/corploc"
+  },
+  "plugins": [
+    {
+      "name": "corploc-skills",
+      "source": "./plugins/corploc-skills",
+      "description": "Curated skills from the corploc org — pentest workflows, diagram generation",
+      "version": "0.1.0",
+      "category": "security"
+    },
+    {
+      "name": "glm-plugin",
+      "source": {
+        "source": "github",
+        "repo": "corploc/glm-plugin-cc",
+        "ref": "main",
+        "sha": "4d5ad2c5d5e79a00789fd30a85edd50f4f3a6dfc"
+      },
+      "description": "GLM companion for Claude Code — delegate tasks, reviews, and rescue operations to ZhipuAI models",
+      "version": "1.0.0",
+      "category": "ai"
+    }
+  ]
+}
